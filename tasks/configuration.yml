@@ -1,0 +1,130 @@
+---
+- name: Configure DB access.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: database
+    option:  connection
+    value:   'mysql+pymysql://neutron:{{ mysql_password }}@{{ mysql_host }}/neutron'
+
+- name: Enable ML2.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: DEFAULT
+    option:  core_plugin
+    value:   ml2
+
+- name: Use RabbitMQ.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: DEFAULT
+    option:  rpc_backend
+    value:   rabbit
+
+- name: Configure RabbitMQ access.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: oslo_messaging_rabbit
+    option:  '{{ item.key }}'
+    value:   '{{ item.value }}'
+  with_dict:
+    rabbit_host:     '{{ rabbitmq_host }}'
+    rabbit_userid:   '{{ rabbitmq_user }}'
+    rabbit_password: '{{ rabbitmq_password }}'
+
+- name: Use Keystone.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: DEFAULT
+    option:  auth_strategy
+    value:   keystone
+
+- name: Configure Keystone access.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: keystone_authtoken
+    option:  '{{ item.option }}'
+    value:   '{{ item.value }}'
+  with_dict:
+    auth_uri:            'http://{{ keystone_host }}:5000'
+    auth_url:            'http://{{ keystone_host }}:35357'
+    memcached_servers:   '{{ keystone_host }}:11211'
+    auth_type:           password
+    project_domain_name: default
+    user_domain_name:    default
+    project_name:        service
+    username:            neutron
+    password:            '{{ keystone_password }}'
+
+- name: Notify Nova about topology changes.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: DEFAULT
+    option:  '{{ item }}'
+    value:   true
+  with_items:
+    - notify_nova_on_port_status_changes
+    - notify_nova_on_port_data_changes
+
+- name: Configure Nova access.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: nova
+    option:  '{{ item.key }}'
+    value:   '{{ item.value }}'
+  with_dict:
+    auth_url:            'http://{{ nova_host }}:35357'
+    auth_type:           password
+    project_domain_name: default
+    user_domain_name:    default
+    region_name:         '{{ region }}'
+    project_name:        service
+    username:            nova
+    password:            '{{ nova_password }}'
+
+- name: Configure lock path.
+  ini_file:
+    dest:    /etc/neutron/neutron.conf
+    section: oslo_concurrency
+    option:  lock_path
+    value:   /var/lib/neutron/tmp
+
+- name: Configure ML2 plugin.
+  ini_file:
+    dest:    /etc/neutron/plugins/ml2/ml2_conf.ini
+    section: ml2
+    option:  '{{ item.key }}'
+    value:   '{{ item.value }}'
+  with_dict:
+    type_drivers:         local
+    tenant_network_types: local
+    mechanism_drivers:    linuxbridge
+
+- name: Configure DHCP agent.
+  ini_file:
+    dest:    /etc/neutron/dhcp_agent.ini
+    section: DEFAULT
+    option:  interface_driver
+    value:   neutron.agent.linux.interface.BridgeInterfaceDriver
+
+- name: Configure metadata agent.
+  ini_file:
+    dest:    /etc/neutron/metadata_agent.ini
+    section: DEFAULT
+    option:  '{{ item.key }}'
+    value:   '{{ item.value }}'
+  with_dict:
+    nova_metadata_ip:             '{{ host }}'
+    metadata_proxy_shared_secret: '{{ metadata_secret }}'
+
+- name: Disable VXLAN in LinuxBridge ML2 plugin.
+  ini_file:
+    dest:    /etc/neutron/plugins/ml2/linuxbridge_agent.ini
+    section: vxlan
+    option:  enable_vxlan
+    value:   false
+
+- name: Create link to ML2 configuration.
+  file:
+    src:   /etc/neutron/plugins/ml2/ml2_conf.ini
+    dest:  /etc/neutron/plugin.ini
+    state: link

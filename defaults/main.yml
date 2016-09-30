@@ -1,0 +1,21 @@
+---
+host: controller
+
+nova_host: controller
+nova_password:
+
+keystone_host: controller
+keystone_password:
+
+keystone_admin_token:
+
+mysql_host: controller
+mysql_password:
+
+rabbitmq_host: controller
+rabbitmq_user:
+rabbitmq_password:
+
+metadata_secret:
+
+region: RegionOne

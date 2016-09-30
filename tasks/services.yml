@@ -1,0 +1,11 @@
+---
+- name: Configure Neutron services.
+  service:
+    name:    '{{ item }}'
+    state:   started
+    enabled: yes
+  with_items:
+    - neutron-server.service
+    - neutron-linuxbridge-agent.service
+    - neutron-dhcp-agent.service
+    - neutron-metadata-agent.service

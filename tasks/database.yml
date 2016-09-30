@@ -1,0 +1,24 @@
+---
+- name: Create Neutron DB.
+  mysql_db:
+    login_host: '{{ mysql_host }}'
+    name:       neutron
+    state:      present
+
+- name: Create Neutron DB users.
+  mysql_user:
+    name:       neutron
+    login_host: '{{ mysql_host }}'
+    password:   '{{ mysql_password }}'
+    priv:       neutron.*:ALL
+    state:      present
+    host:       '{{ item }}'
+  with_items:
+    - localhost
+    - '%'
+
+- name:         Populate Neutron DB.
+  changed_when: no
+  command:      neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+  become:       true
+  become_user:  neutron
