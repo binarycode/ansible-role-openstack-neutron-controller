@@ -42,7 +42,7 @@
   ini_file:
     dest:    /etc/neutron/neutron.conf
     section: keystone_authtoken
-    option:  '{{ item.option }}'
+    option:  '{{ item.key }}'
     value:   '{{ item.value }}'
   with_dict:
     auth_uri:            'http://{{ keystone_host }}:5000'

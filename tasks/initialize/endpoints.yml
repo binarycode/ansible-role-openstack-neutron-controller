@@ -8,6 +8,6 @@
   command: 'openstack endpoint create --region {{ region }} network {{ item.key }} {{ item.value }}'
   when:    '"{{ item.key }}" not in openstack_network_endpoints.stdout'
   with_dict:
-    public:   http://controller:9696
-    internal: http://controller:9696
-    admin:    http://controller:9696
+    public:   'http://{{ host }}:9696'
+    internal: 'http://{{ host }}:9696'
+    admin:    'http://{{ host }}:9696'
