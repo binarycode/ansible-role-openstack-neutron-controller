@@ -1,14 +1,12 @@
 ---
 - name: Create Neutron DB.
   mysql_db:
-    login_host: '{{ mysql_host }}'
     name:       neutron
     state:      present
 
 - name: Create Neutron DB users.
   mysql_user:
     name:       neutron
-    login_host: '{{ mysql_host }}'
     password:   '{{ mysql_password }}'
     priv:       neutron.*:ALL
     state:      present
